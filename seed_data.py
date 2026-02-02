@@ -1,4 +1,4 @@
-from app import app, db, User, Notification, Post, Event, EventRegistration,Job,JobApplication
+from app import app, db, User, Notification, Post, Event, Job, EventRegistration, JobApplication, Mentorship, EventFeedback
 
 def seed():
     with app.app_context():
@@ -6,34 +6,63 @@ def seed():
         db.drop_all()
         db.create_all()
         
-        print(">>> Creating new data...")
-        # 1. User
-        student = User(username='Syed', password='123', role='Student')
-        db.session.add(student)
-        db.session.commit()
-
-        # 2. Notifications & Posts
-        notifs = [Notification(title="Miracle Rosser", message="Hey!", user_id=student.id)]
-        posts = [Post(content="Hello World!", author_name="Syed")]
-        print(">>> Wiping old data...")
-        db.drop_all()
-        db.create_all()
-        
         print(">>> Creating Users...")
         # 1. The Student (You)
-        syed = User(username='Syed', password='123', role='Student')
+        syed = User(
+            username='Syed', 
+            password='123', 
+            role='Student',
+            full_name='Syed Ali',
+            email='syed@example.com',
+            headline='Software Engineering Student',
+            bio='Aspiring Full Stack Developer passionate about Python and Flask.',
+            location='Cyberjaya',
+            skills='Python, HTML, CSS, Flask'
+        )
         
         # 2. The Alumni (Mentors)
-        alum1 = User(username='Dr. Sarah', password='123', role='Alumni')
-        alum2 = User(username='Mr. James', password='123', role='Alumni')
-        alum3 = User(username='Ms. Fiona', password='123', role='Alumni')
+        alum1 = User(
+            username='Dr. Sarah', 
+            password='123', 
+            role='Alumni',
+            full_name='Dr. Sarah Ahmed',
+            headline='Senior Data Scientist at Google',
+            bio='Ph.D. in AI. Helping students navigate the world of Data Science.',
+            location='Singapore',
+            skills='AI, Machine Learning, Data Science'
+        )
+        
+        alum2 = User(
+            username='Mr. James', 
+            password='123', 
+            role='Alumni',
+            full_name='James Lee',
+            headline='Product Manager at Grab',
+            location='Kuala Lumpur'
+        )
+        
+        alum3 = User(
+            username='Ms. Fiona', 
+            password='123', 
+            role='Alumni',
+            full_name='Fiona Tan',
+            headline='Software Engineer at Shopee',
+            location='Singapore'
+        )
 
         db.session.add_all([syed, alum1, alum2, alum3])
         db.session.commit()
+
+        print(">>> Creating Content...")
         
-        print(">>> Success! Login as Syed (123) and go to Mentorship page.")
-        # 3. Events (NEW)
-        # In seed_data.py, update the events list:
+        # 3. Notifications & Posts
+        notifs = [Notification(title="Welcome!", message="Welcome to the Alumni Network.", user_id=syed.id)]
+        posts = [
+            Post(content="Just finished my final year project! #MMU #Graduation", author_name="Syed"),
+            Post(content="Looking for interns at Grab! DM me for details.", author_name="Mr. James")
+        ]
+
+        # 4. Events
         events = [
             Event(
                 title="MMU Career Fair 2026", 
@@ -57,6 +86,8 @@ def seed():
                 description="The theme for this year's hackathon is AI for Good. Form a team of 3-4 and build a solution in 24 hours. Great prizes to be won!"
             )
         ]
+
+        # 5. Jobs
         jobs = [
             Job(
                 title="Junior Software Engineer", 
@@ -94,8 +125,8 @@ def seed():
         db.session.add_all(jobs)
         db.session.commit()
 
-        
-        print(">>> Success! Database ready.")
+        print(">>> Success! Database seeded.")
+        print(">>> Login with Username: 'Syed' and Password: '123'")
 
 if __name__ == '__main__':
     seed()

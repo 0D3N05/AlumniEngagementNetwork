@@ -64,16 +64,14 @@ class EventRegistration(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
 
-# NEW MODEL: Event Feedback
 class EventFeedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
-    rating = db.Column(db.Integer, nullable=False) # 1 to 5
+    rating = db.Column(db.Integer, nullable=False)
     comment = db.Column(db.Text, nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # Relationships
     user = db.relationship('User', backref='feedbacks')
     event = db.relationship('Event', backref='feedbacks')
 
@@ -127,16 +125,19 @@ def login():
     return render_template('login.html')
 
 @app.route('/logout')
+@login_required  # <--- FIXED
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
 @app.route('/')
+@login_required  # <--- FIXED
 def home():
     all_posts = Post.query.order_by(Post.timestamp.desc()).all()
     return render_template('student/home.html', active_page='home', posts=all_posts, user=current_user)
 
 @app.route('/create_post', methods=['POST'])
+@login_required  # <--- FIXED
 def create_post():
     post_content = request.form.get('content')
     if post_content:
@@ -146,20 +147,21 @@ def create_post():
     return redirect(url_for('home'))
 
 @app.route('/notifications')
+@login_required  # <--- FIXED
 def notifications():
     all_notifs = Notification.query.order_by(Notification.timestamp.desc()).all()
     return render_template('student/notifications.html', active_page='notifications', notifications=all_notifs)
 
 @app.route('/events')
+@login_required  # <--- FIXED
 def events():
     all_events = Event.query.all()
     my_registrations = EventRegistration.query.filter_by(user_id=current_user.id).all()
     registered_ids = [reg.event_id for reg in my_registrations]
     return render_template('student/events.html', active_page='events', events=all_events, registered_ids=registered_ids)
 
-# --- NOTE: Removed Duplicate event_details from here ---
-
 @app.route('/register/<int:event_id>')
+@login_required  # <--- FIXED
 def register_event(event_id):
     exists = EventRegistration.query.filter_by(user_id=current_user.id, event_id=event_id).first()
     if not exists:
@@ -170,6 +172,7 @@ def register_event(event_id):
     return redirect(request.referrer or url_for('events'))
 
 @app.route('/unregister/<int:event_id>')
+@login_required  # <--- FIXED
 def unregister_event(event_id):
     reg = EventRegistration.query.filter_by(user_id=current_user.id, event_id=event_id).first()
     if reg:
@@ -179,6 +182,7 @@ def unregister_event(event_id):
     return redirect(request.referrer or url_for('events'))
 
 @app.route('/messages')
+@login_required  # <--- FIXED
 def messages():
     sent_to = [m.receiver_id for m in Message.query.filter_by(sender_id=current_user.id).all()]
     received_from = [m.sender_id for m in Message.query.filter_by(receiver_id=current_user.id).all()]
@@ -189,6 +193,7 @@ def messages():
     return render_template('student/messages.html', active_page='messages', contacts=contacts)
 
 @app.route('/chat/<int:user_id>', methods=['GET', 'POST'])
+@login_required  # <--- FIXED
 def chat(user_id):
     other_user = User.query.get_or_404(user_id)
     if request.method == 'POST':
@@ -207,10 +212,8 @@ def chat(user_id):
     ).order_by(Message.timestamp.asc()).all()
     return render_template('student/chat.html', other_user=other_user, messages=conversation)
 
-# --- JOB ROUTES ---
-
 @app.route('/jobs')
-
+@login_required  # <--- FIXED
 def jobs():
     all_jobs = Job.query.order_by(Job.posted_date.desc()).all()
     my_apps = JobApplication.query.filter_by(user_id=current_user.id).all()
@@ -218,6 +221,7 @@ def jobs():
     return render_template('student/jobs.html', active_page='jobs', jobs=all_jobs, applied_ids=applied_ids)
 
 @app.route('/job/<int:job_id>')
+@login_required  # <--- FIXED
 def job_details(job_id):
     job = Job.query.get_or_404(job_id)
     application = JobApplication.query.filter_by(user_id=current_user.id, job_id=job_id).first()
@@ -225,6 +229,7 @@ def job_details(job_id):
     return render_template('student/component/job_details.html', job=job, is_applied=is_applied)
 
 @app.route('/apply/<int:job_id>')
+@login_required  # <--- FIXED
 def apply_job(job_id):
     existing = JobApplication.query.filter_by(user_id=current_user.id, job_id=job_id).first()
     if not existing:
@@ -234,9 +239,8 @@ def apply_job(job_id):
         flash('Application sent successfully!', 'success')
     return redirect(request.referrer or url_for('jobs'))
 
-# --- MENTORSHIP ROUTES ---
-
 @app.route('/mentorship')
+@login_required  # <--- FIXED (This prevents the crash)
 def mentorship():
     alumni_list = User.query.filter_by(role='Alumni').all()
     my_requests = Mentorship.query.filter_by(student_id=current_user.id).all()
@@ -244,20 +248,17 @@ def mentorship():
     return render_template('student/mentorship.html', active_page='mentorship', alumni_list=alumni_list, request_status=request_status)
 
 @app.route('/mentor/<int:mentor_id>')
+@login_required  # <--- FIXED
 def mentor_details(mentor_id):
     mentor = User.query.get_or_404(mentor_id)
-    
-    # Check if there is a request
     req = Mentorship.query.filter_by(student_id=current_user.id, mentor_id=mentor_id).first()
-    status = req.status if req else None # Returns 'Pending', 'Accepted', or None
-
+    status = req.status if req else None 
     return render_template('student/component/mentor_details.html', mentor=mentor, status=status)
 
-
 @app.route('/edit_profile', methods=['POST'])
+@login_required  # <--- FIXED
 def edit_profile():
     if request.method == 'POST':
-        # Get data from the form
         current_user.full_name = request.form.get('full_name')
         current_user.email = request.form.get('email')
         current_user.phone = request.form.get('phone')
@@ -266,121 +267,77 @@ def edit_profile():
         current_user.location = request.form.get('location')
         current_user.bio = request.form.get('bio')
         current_user.skills = request.form.get('skills')
-        
-        # Save to database
         db.session.commit()
         flash('Profile updated successfully!', 'success')
-        
-    # Go back to the profile page
     return redirect(url_for('profile'))
 
 @app.route('/request_mentor/<int:mentor_id>')
+@login_required  # <--- FIXED
 def request_mentor(mentor_id):
     existing = Mentorship.query.filter_by(student_id=current_user.id, mentor_id=mentor_id).first()
-    
     if not existing:
         new_req = Mentorship(student_id=current_user.id, mentor_id=mentor_id)
         db.session.add(new_req)
         db.session.commit()
         flash('Mentorship request sent!', 'success')
-        
     return redirect(request.referrer or url_for('mentorship'))
 
 @app.route('/cancel_request/<int:mentor_id>')
+@login_required  # <--- FIXED
 def cancel_request(mentor_id):
     req = Mentorship.query.filter_by(student_id=current_user.id, mentor_id=mentor_id).first()
-    
     if req:
         db.session.delete(req)
         db.session.commit()
         flash('Mentorship request cancelled.', 'info')
-    
     return redirect(request.referrer or url_for('mentorship'))
 
-# --- THIS IS THE CORRECT EVENT DETAILS (Includes Feedback) ---
 @app.route('/event/<int:event_id>')
+@login_required  # <--- FIXED
 def event_details(event_id):
     event = Event.query.get_or_404(event_id)
-    
-    # Check registration
     registration = EventRegistration.query.filter_by(user_id=current_user.id, event_id=event_id).first()
     is_registered = True if registration else False
-    
-    # Check if already provided feedback
     existing_feedback = EventFeedback.query.filter_by(user_id=current_user.id, event_id=event_id).first()
-    
-    # Get all feedback for this event (to display reviews)
     all_reviews = EventFeedback.query.filter_by(event_id=event_id).order_by(EventFeedback.timestamp.desc()).all()
-
-    return render_template('student/component/event_details.html', 
-                           event=event, 
-                           is_registered=is_registered, 
-                           my_feedback=existing_feedback,
-                           reviews=all_reviews)
+    return render_template('student/component/event_details.html', event=event, is_registered=is_registered, my_feedback=existing_feedback, reviews=all_reviews)
 
 @app.route('/submit_feedback/<int:event_id>', methods=['POST'])
+@login_required  # <--- FIXED
 def submit_feedback(event_id):
-    # Check if already submitted
     existing = EventFeedback.query.filter_by(user_id=current_user.id, event_id=event_id).first()
     if existing:
         flash('You have already reviewed this event.', 'warning')
         return redirect(url_for('event_details', event_id=event_id))
-
     rating = request.form.get('rating')
     comment = request.form.get('comment')
-    
     if rating:
-        new_feedback = EventFeedback(
-            user_id=current_user.id,
-            event_id=event_id,
-            rating=int(rating),
-            comment=comment
-        )
+        new_feedback = EventFeedback(user_id=current_user.id, event_id=event_id, rating=int(rating), comment=comment)
         db.session.add(new_feedback)
         db.session.commit()
         flash('Thank you for your feedback!', 'success')
-        
     return redirect(url_for('event_details', event_id=event_id))
 
 @app.route('/profile')
+@login_required  # <--- FIXED
 def profile():
     my_posts = Post.query.filter_by(author_name=current_user.username).order_by(Post.timestamp.desc()).all()
-    # Calculate Stats
     event_count = EventRegistration.query.filter_by(user_id=current_user.id).count()
     job_count = JobApplication.query.filter_by(user_id=current_user.id).count()
     mentor_count = Mentorship.query.filter_by(student_id=current_user.id).count()
-
-    return render_template('student/profile.html', 
-                           active_page='profile', 
-                           user=current_user, 
-                           posts=my_posts,
-                           event_count=event_count,
-                           job_count=job_count,
-                           mentor_count=mentor_count)
+    return render_template('student/profile.html', active_page='profile', user=current_user, posts=my_posts, event_count=event_count, job_count=job_count, mentor_count=mentor_count)
 
 @app.route('/dashboard')
+@login_required  # <--- FIXED
 def dashboard():
-    # 1. Get Stats (Counts)
     event_count = EventRegistration.query.filter_by(user_id=current_user.id).count()
     job_count = JobApplication.query.filter_by(user_id=current_user.id).count()
     mentor_reqs = Mentorship.query.filter_by(student_id=current_user.id).all()
-    
-    # Count how many mentors are actually 'Accepted' vs just requested
     active_mentors = sum(1 for m in mentor_reqs if m.status == 'Accepted')
-
-    # 2. Get Recent Notifications (Limit 5)
-    recent_notifs = Notification.query.filter_by(user_id=current_user.id)\
-                                      .order_by(Notification.timestamp.desc())\
-                                      .limit(5).all()
-
-    return render_template('student/dashboard.html', 
-                           active_page='dashboard',
-                           event_count=event_count,
-                           job_count=job_count,
-                           active_mentors=active_mentors,
-                           notifications=recent_notifs)
+    recent_notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.timestamp.desc()).limit(5).all()
+    return render_template('student/dashboard.html', active_page='dashboard', event_count=event_count, job_count=job_count, active_mentors=active_mentors, notifications=recent_notifs)
 
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    app.run(debug=True,port=5500)
+    app.run(debug=True, port=5500)

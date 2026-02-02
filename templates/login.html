@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; align-items: center; height: 80vh;">
+    
+    <div style="background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center;">
+        
+        <h2 style="margin-bottom: 20px; color: #333;">Welcome Back</h2>
+        
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 20px; font-size: 14px;">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+            
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #555;">Username</label>
+                <input type="text" name="username" required placeholder="Enter your username" 
+                       style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+            </div>
+
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="display: block; font-weight: bold; margin-bottom: 5px; color: #555;">Password</label>
+                <input type="password" name="password" required placeholder="Enter your password" 
+                       style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box;">
+            </div>
+
+            <button type="submit" class="btn-green" style="width: 100%; padding: 12px; font-size: 16px;">Login</button>
+            
+        </form>
+
+        <p style="margin-top: 20px; font-size: 14px; color: #777;">
+            Don't have an account? <a href="#" style="color: #7DA68D; font-weight: bold;">Sign Up</a>
+        </p>
+
+    </div>
+
+</div>
+{% endblock %}

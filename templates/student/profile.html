@@ -142,8 +142,10 @@
 
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
                     <div>
-                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Phone</label>
-                        <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="+60 12-345 6789" 
+                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Phone (Numbers only)</label>
+                        <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="60123456789" 
+                               oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                               inputmode="numeric"
                                style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
                     </div>
                     <div>

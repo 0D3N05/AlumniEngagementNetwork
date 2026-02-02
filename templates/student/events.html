@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="feed">
+    <div class="feed-header">
+        <h2>Upcoming Events</h2>
+    </div>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div style="background: #d4edda; color: #155724; padding: 10px; margin-bottom: 15px; border-radius: 5px;">
+                {{ messages[0] }}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    {% for event in events %}
+    <div class="event-card">
+        <div class="event-date-box">
+            <span class="day" style="font-size:14px; font-weight:bold;">{{ event.date_str }}</span>
+        </div>
+        
+        <div class="event-details">
+            <h3>
+                <a href="/event/{{ event.id }}" style="text-decoration:none; color:#333;">
+                    {{ event.title }}
+                </a>
+            </h3>
+            
+            <p class="event-meta"><i class="far fa-clock"></i> {{ event.time_str }}</p>
+            <p class="event-meta"><i class="fas fa-map-marker-alt"></i> {{ event.location }}</p>
+        </div>
+        
+        {% if event.id in registered_ids %}
+            <div style="display:flex; flex-direction:column; align-items:center; gap:5px;">
+                <span style="color: #7DA68D; font-weight: bold; font-size: 12px;">
+                    <i class="fas fa-check-circle"></i> Registered
+                </span>
+                <a href="/unregister/{{ event.id }}" style="color: #dc3545; font-size: 11px; text-decoration: underline;">
+                   Cancel
+                </a>
+            </div>
+        {% else %}
+            <a href="/register/{{ event.id }}" class="btn-outline" style="text-decoration:none;">
+                Register
+            </a>
+        {% endif %}
+    </div>
+    {% else %}
+        <p>No upcoming events found.</p>
+    {% endfor %}
+
+</main>
+{% endblock %}

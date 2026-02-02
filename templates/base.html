@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MMU Alumni System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="top-nav">
+        <div class="logo-area">
+            <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo" class="nav-logo">
+        </div>
+        <a href="/logout" class="logout">LOGOUT</a>
+    </header>
+
+    <div class="container">
+        
+        <aside class="sidebar-left">
+            <div class="profile-mini">
+                <img src="https://via.placeholder.com/50" alt="Profile" class="avatar">
+            </div>
+            <nav>
+                <a href="/" class="{{ 'active' if active_page == 'home' else '' }}">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="/notifications" class="{{ 'active' if active_page == 'notifications' else '' }}">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+                <a href="/messages" class="{{ 'active' if active_page == 'messages' else '' }}">
+                    <i class="fas fa-envelope"></i> Messages
+                </a>
+                <a href="/mentorship"><i class="fas fa-user-friends"></i> Mentorship</a>
+                <a href="/events"><i class="fas fa-calendar"></i> Events</a>
+                <a href="/jobs"><i class="fas fa-briefcase"></i> Job</a>
+                <a href="/profile"><i class="fas fa-user"></i> My Profile</a>
+
+            </nav>
+            <button class="btn-green">+ New Post</button>
+        </aside>
+
+        {% block content %}
+        {% endblock %}
+
+       <aside class="sidebar-right">
+            
+            <div class="search-box-container" style="background:white; padding:15px; border-radius:8px; border:1px solid #ddd; margin-bottom:20px;">
+                <div class="search-box" style="background:#f0f2f5; display:flex; align-items:center; padding:10px 15px; border-radius:20px;">
+                    <i class="fas fa-search" style="color:#777; margin-right:10px;"></i>
+                    <input type="text" placeholder="Search alumni, jobs..." style="border:none; background:transparent; outline:none; font-size:14px; width:100%;">
+                </div>
+            </div>
+
+            <div class="sidebar-card" style="background:white; border-radius:8px; border:1px solid #ddd; padding:15px; margin-bottom:20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h3 style="margin:0; font-size:16px; color:#333;">Who to follow</h3>
+                    <a href="#" style="font-size:12px; color:#7DA68D; text-decoration:none; font-weight:bold;">View All</a>
+                </div>
+
+                <div class="suggestion-item" style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                    <div style="width:40px; height:40px; background:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
+                        D
+                    </div>
+                    <div style="flex-grow:1;">
+                        <h4 style="margin:0; font-size:14px;">Dr. Rozana</h4>
+                        <p style="margin:0; font-size:12px; color:#777;">FCI Lecturer</p>
+                    </div>
+                    <button style="border:1px solid #7DA68D; background:white; color:#7DA68D; border-radius:15px; padding:5px 10px; font-size:12px; cursor:pointer; font-weight:bold;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+                <div class="suggestion-item" style="display:flex; align-items:center; gap:10px; margin-bottom:15px;">
+                    <div style="width:40px; height:40px; background:#555; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold;">
+                        J
+                    </div>
+                    <div style="flex-grow:1;">
+                        <h4 style="margin:0; font-size:14px;">Jessica Alba</h4>
+                        <p style="margin:0; font-size:12px; color:#777;">Alumni 2019</p>
+                    </div>
+                    <button style="border:1px solid #7DA68D; background:white; color:#7DA68D; border-radius:15px; padding:5px 10px; font-size:12px; cursor:pointer; font-weight:bold;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="sidebar-card" style="background:white; border-radius:8px; border:1px solid #ddd; padding:15px;">
+                <h3 style="margin:0 0 15px 0; font-size:16px; color:#333;">Trending in Malaysia</h3>
+                
+                <div style="margin-bottom:15px;">
+                    <span style="font-size:11px; color:#777; display:block;">Technology • Trending</span>
+                    <strong style="font-size:14px; color:#333;">#MMUConvocation</strong>
+                    <span style="font-size:11px; color:#777; display:block;">2.4k Posts</span>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <span style="font-size:11px; color:#777; display:block;">Business • Trending</span>
+                    <strong style="font-size:14px; color:#333;">Grab Internship</strong>
+                    <span style="font-size:11px; color:#777; display:block;">1.1k Posts</span>
+                </div>
+
+                <div>
+                    <span style="font-size:11px; color:#777; display:block;">Events</span>
+                    <strong style="font-size:14px; color:#333;">Cyberjaya Tech Talk</strong>
+                    <span style="font-size:11px; color:#777; display:block;">500 Posts</span>
+                </div>
+            </div>
+
+            <div style="text-align:center; margin-top:20px; font-size:12px; color:#999;">
+                <p>&copy; 2025 Alumni Network • <a href="#" style="color:#999;">Privacy</a> • <a href="#" style="color:#999;">Terms</a></p>
+            </div>
+
+        </aside>
+    </div>
+
+    <footer>
+        <div class="footer-logo">
+            <h2>MMU</h2>
+            <p>FACULTY OF COMPUTING & INFORMATICS</p>
+        </div>
+        <div class="course-info">
+            CSE6214 - SOFTWARE ENG FUNDAMENTALS - TT090B - Multimedia University
+        </div>
+    </footer>
+
+</body>
+</html>

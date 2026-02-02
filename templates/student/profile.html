@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="feed">
+
+    <div class="profile-header-card" style="background:white; border-radius:8px; overflow:hidden; border:1px solid #ddd; margin-bottom:20px;">
+        <div style="height:180px; background: linear-gradient(120deg, #7DA68D, #4a7c5e);"></div>
+        
+        <div style="padding:0 30px 30px 30px; position:relative;">
+            <div style="width:130px; height:130px; background:#333; border:5px solid white; border-radius:50%; position:absolute; top:-65px; display:flex; align-items:center; justify-content:center; color:white; font-size:50px; font-weight:bold;">
+                {{ user.username[0] | upper }}
+            </div>
+
+            <div style="text-align:right; padding-top:15px;">
+                <button onclick="openEditModal()" class="btn-outline-sm" style="cursor:pointer;">
+                    <i class="fas fa-pen"></i> Edit Profile
+                </button>
+            </div>
+
+            <div style="margin-top:10px;">
+                <h1 style="margin:0; font-size:28px;">
+                    {{ user.full_name if user.full_name else user.username }}
+                </h1>
+                
+                <p style="color:#555; margin:5px 0;">
+                    {{ user.headline if user.headline else 'No headline yet.' }}
+                </p>
+                
+                <p style="color:#777; font-size:14px;">
+                    <i class="fas fa-map-marker-alt"></i> {{ user.location if user.location else 'Location not set' }} 
+                    
+                    {% if user.email %}
+                    • <span style="color:#7DA68D;">{{ user.email }}</span>
+                    {% endif %}
+                </p>
+            </div>
+
+            <div style="display:flex; gap:40px; margin-top:20px; border-top:1px solid #eee; padding-top:15px;">
+                <div style="text-align:center;">
+                    <b style="color:#333; font-size:20px; display:block;">{{ event_count }}</b> <span style="color:#777; font-size:13px;">Events Joined</span>
+                </div>
+                <div style="text-align:center;">
+                    <b style="color:#333; font-size:20px; display:block;">{{ job_count }}</b> <span style="color:#777; font-size:13px;">Jobs Applied</span>
+                </div>
+                <div style="text-align:center;">
+                    <b style="color:#333; font-size:20px; display:block;">{{ mentor_count }}</b> <span style="color:#777; font-size:13px;">Mentors</span>
+                </div>
+                <div style="text-align:center;">
+                    <b style="color:#333; font-size:20px; display:block;">{{ posts|length }}</b> <span style="color:#777; font-size:13px;">Posts</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="profile-grid">
+        <div class="profile-sidebar">
+            <div class="info-card">
+                <h3>Skills</h3>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:10px;">
+                    {% if user.skills %}
+                        {% for skill in user.skills.split(',') %}
+                            <span class="skill-pill">{{ skill.strip() }}</span>
+                        {% endfor %}
+                    {% else %}
+                        <span style="color:#777; font-size:13px;">No skills added yet.</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>About</h3>
+                <p style="font-size:14px; color:#555; line-height:1.6;">
+                    {{ user.bio if user.bio else 'No bio added yet.' }}
+                </p>
+            </div>
+
+            {% if user.phone or user.address %}
+            <div class="info-card" style="margin-top:20px;">
+                <h3>Contact Details</h3>
+                {% if user.phone %}
+                <p style="font-size:14px; color:#555; margin-bottom:5px;"><i class="fas fa-phone"></i> {{ user.phone }}</p>
+                {% endif %}
+                {% if user.address %}
+                <p style="font-size:14px; color:#555;"><i class="fas fa-home"></i> {{ user.address }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="profile-feed">
+            <div class="info-card">
+                <h3>Experience</h3>
+                <div class="timeline-item">
+                    <div class="timeline-icon"><i class="fas fa-briefcase"></i></div>
+                    <div>
+                        <h4 style="margin:0;">Intern, Software Developer</h4>
+                        <p style="margin:2px 0; color:#555; font-size:14px;">Grab Malaysia • Internship</p>
+                        <p style="margin:2px 0; color:#888; font-size:12px;">Jun 2025 - Aug 2025</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 style="margin: 20px 0 10px 0; font-size:18px;">Recent Activity</h3>
+            {% for post in posts %}
+            <div class="post-card">
+                <div class="post-header">
+                    <div class="mini-avatar">{{ user.username[0] | upper }}</div>
+                    <div class="post-info">
+                        <span class="name">{{ user.username }}</span>
+                        <span class="time">{{ post.timestamp.strftime('%d %b %Y') }}</span>
+                    </div>
+                </div>
+                <div class="post-content"><p>{{ post.content }}</p></div>
+            </div>
+            {% else %}
+            <p style="color:#777;">No posts yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="margin:0;">Edit Profile</h2>
+                <span onclick="closeEditModal()" style="font-size:28px; cursor:pointer; color:#aaa;">&times;</span>
+            </div>
+
+            <form action="{{ url_for('edit_profile') }}" method="POST">
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                    <div>
+                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Full Name</label>
+                        <input type="text" name="full_name" value="{{ user.full_name or '' }}" placeholder="John Doe" 
+                               style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Email</label>
+                        <input type="email" name="email" value="{{ user.email or '' }}" placeholder="john@example.com" 
+                               style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
+                    <div>
+                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Phone</label>
+                        <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="+60 12-345 6789" 
+                               style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Location (City)</label>
+                        <input type="text" name="location" value="{{ user.location or '' }}" placeholder="Cyberjaya" 
+                               style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:bold; margin-bottom:5px;">Full Address</label>
+                    <input type="text" name="address" value="{{ user.address or '' }}" placeholder="No. 123, Jalan MMU, 63000 Cyberjaya, Selangor" 
+                           style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                </div>
+
+                <hr style="border:0; border-top:1px solid #eee; margin:20px 0;">
+
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:bold; margin-bottom:5px;">Headline</label>
+                    <input type="text" name="headline" value="{{ user.headline or '' }}" placeholder="Software Engineering Student" 
+                           style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                </div>
+
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:bold; margin-bottom:5px;">Skills (comma separated)</label>
+                    <input type="text" name="skills" value="{{ user.skills or '' }}" placeholder="Python, HTML, SQL" 
+                           style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box;">
+                </div>
+
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-weight:bold; margin-bottom:5px;">Bio</label>
+                    <textarea name="bio" rows="3" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; box-sizing:border-box; font-family:inherit;">{{ user.bio or '' }}</textarea>
+                </div>
+
+                <button type="submit" class="btn-green" style="width:100%;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    function openEditModal() {
+        document.getElementById('editModal').style.display = 'block';
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    // Close modal if user clicks outside the box
+    window.onclick = function(event) {
+        var modal = document.getElementById('editModal');
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="feed">
+    
+    <div class="create-post-box">
+        <img src="https://via.placeholder.com/40" class="avatar">
+        
+        <form action="/create_post" method="POST" style="flex-grow: 1; display: flex; gap: 10px;">
+            <input type="text" name="content" placeholder="What's on your mind, Syed?" required autocomplete="off">
+            <button type="submit" class="btn-green-sm">Post</button>
+        </form>
+    </div>
+
+    {% for post in posts %}
+    <div class="post-card">
+        <div class="post-header">
+            <img src="https://via.placeholder.com/40" class="avatar">
+            <div class="post-info">
+                <span class="name">{{ post.author_name }}</span>
+                <span class="time">{{ post.timestamp.strftime('%d %b at %I:%M %p') }}</span>
+            </div>
+        </div>
+        <div class="post-content">
+            <p>{{ post.content }}</p>
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align: center; color: #999; padding: 20px;">
+        No posts yet. Be the first to share something!
+    </div>
+    {% endfor %}
+
+</main>
+{% endblock %}

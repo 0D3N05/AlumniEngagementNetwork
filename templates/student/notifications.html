@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="feed">
+    <div class="feed-header">
+        <h2>Notifications</h2>
+        <i class="fas fa-cog settings-icon"></i>
+    </div>
+
+    <div class="filters">
+        <span class="pill active">All</span>
+        <span class="pill">Messages</span>
+        <span class="pill">Events</span>
+    </div>
+
+    <p style="color: red; font-weight: bold;">
+        Debug: Found {{ notifications|length }} notifications.
+    </p>
+
+    <div class="notification-list">
+        {% for notif in notifications %}
+        <div class="notification-item">
+            <img src="https://via.placeholder.com/40" class="avatar">
+            <div class="content">
+                <span class="name">{{ notif.title }}</span>
+                <p>{{ notif.message }}</p>
+            </div>
+            <span class="time">{{ notif.timestamp.strftime('%H:%M') }}</span>
+        </div>
+        {% else %}
+        <div style="padding: 20px; text-align: center; color: #999;">
+            <i class="fas fa-inbox fa-2x"></i><br>
+            No notifications found in the database.
+        </div>
+        {% endfor %}
+    </div>
+</main>
+{% endblock %}

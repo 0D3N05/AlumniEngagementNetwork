@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="feed">
+
+    <a href="{{ url_for('mentorship') }}" style="display:inline-block; margin-bottom:15px; text-decoration:none; color:#555;">
+        <i class="fas fa-arrow-left"></i> Back to Mentors
+    </a>
+
+    <div class="job-detail-card" style="background:white; border:1px solid #ddd; border-radius:8px; overflow:hidden;">
+        
+        <div style="height:150px; background:#7DA68D;"></div>
+        
+        <div style="padding: 20px; text-align:center; margin-top:-60px;">
+            <div style="width:100px; height:100px; background:#333; color:white; font-size:40px; border:4px solid white; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto;">
+                {{ mentor.username[0] }}
+            </div>
+            
+            <h1 style="margin:10px 0 5px 0;">{{ mentor.username }}</h1>
+            <p style="color:#7DA68D; font-weight:bold;">{{ mentor.role }}</p>
+            <p style="color:#666; font-size:14px; margin-bottom:20px;">
+                Senior Software Engineer at Google • MMU Class of 2018
+            </p>
+
+            <div style="border-top:1px solid #eee; padding-top:20px; max-width:400px; margin:0 auto;">
+                {% if status == 'Pending' %}
+                    <div style="background:#f8f9fa; padding:15px; border-radius:8px; border:1px solid #ddd;">
+                        <p style="color:#555; margin-bottom:10px;"><i class="fas fa-clock"></i> Request Pending</p>
+                        <a href="/cancel_request/{{ mentor.id }}" style="color:#dc3545; font-size:13px;">Cancel Request</a>
+                    </div>
+                {% elif status == 'Accepted' %}
+                    <div style="background:#d4edda; padding:15px; border-radius:8px; border:1px solid #c3e6cb; color:#155724;">
+                        <i class="fas fa-check-circle"></i> You are being mentored by {{ mentor.username }}!
+                    </div>
+                {% else %}
+                    <a href="/request_mentor/{{ mentor.id }}" class="btn-green">Request Mentorship</a>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div style="padding:30px; border-top:1px solid #eee;">
+            <h3>About</h3>
+            <p style="color:#555; line-height:1.6;">
+                Passionate about helping students navigate the tech industry. I specialize in backend development, system architecture, and cloud computing. I can help with resume reviews and mock interviews.
+            </p>
+            
+            <h3 style="margin-top:20px;">Expertise</h3>
+            <div style="display:flex; gap:10px; margin-top:10px;">
+                <span class="pill">Python</span>
+                <span class="pill">Cloud Computing</span>
+                <span class="pill">Career Advice</span>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+{% endblock %}

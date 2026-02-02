@@ -1,31 +1,304 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from sqlalchemy import or_ 
+from datetime import datetime
 
 app = Flask(__name__)
 
+# --- CONFIGURATION ---
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///alumni.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'mysecretkey' 
 
-#IMAN'S
-@app.route("/")
+db = SQLAlchemy(app)
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login' 
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# --- DATABASE MODELS ---
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(80), unique=True, nullable=False)
+    password = db.Column(db.String(80), nullable=False)
+    role = db.Column(db.String(20), default='Student')
+
+class Notification(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.String(200), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+class Post(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    author_name = db.Column(db.String(50), default="Syed (You)")
+
+class Event(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(100), nullable=False)
+    date_str = db.Column(db.String(20), nullable=False)
+    time_str = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+
+class EventRegistration(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    sender = db.relationship('User', foreign_keys=[sender_id], backref='sent_messages')
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref='received_messages')
+
+class Mentorship(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    mentor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    status = db.Column(db.String(20), default='Pending')
+    
+    student = db.relationship('User', foreign_keys=[student_id], backref='mentorship_requests_sent')
+    mentor = db.relationship('User', foreign_keys=[mentor_id], backref='mentorship_requests_received')
+
+class Job(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    company = db.Column(db.String(100), nullable=False)
+    location = db.Column(db.String(100), nullable=False)
+    job_type = db.Column(db.String(50), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    posted_date = db.Column(db.DateTime, default=datetime.utcnow)
+    
+class JobApplication(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    applied_date = db.Column(db.DateTime, default=datetime.utcnow)
+
+# --- ROUTES ---
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        if user and user.password == password:
+            login_user(user)
+            return redirect(url_for('home'))
+        else:
+            flash('Invalid username or password')
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('login'))
+
+@app.route('/')
+@login_required
 def home():
-    return render_template("index.html")
+    all_posts = Post.query.order_by(Post.timestamp.desc()).all()
+    return render_template('student/home.html', active_page='home', posts=all_posts, user=current_user)
 
-@app.route("/student")
-def student():
-    return render_template("/Dashboard/student.html")
+@app.route('/create_post', methods=['POST'])
+@login_required
+def create_post():
+    post_content = request.form.get('content')
+    if post_content:
+        new_post = Post(content=post_content, author_name=current_user.username)
+        db.session.add(new_post)
+        db.session.commit()
+    return redirect(url_for('home'))
 
-@app.route("/alumni")
-def alumni():
-    return render_template("/Dashboard/alumni.html")
+@app.route('/notifications')
+@login_required
+def notifications():
+    all_notifs = Notification.query.order_by(Notification.timestamp.desc()).all()
+    return render_template('student/notifications.html', active_page='notifications', notifications=all_notifs)
 
-@app.route("/officer")
-def officer():
-    return render_template("/Dashboard/officer.html")
+@app.route('/events')
+@login_required
+def events():
+    all_events = Event.query.all()
+    my_registrations = EventRegistration.query.filter_by(user_id=current_user.id).all()
+    registered_ids = [reg.event_id for reg in my_registrations]
+    return render_template('student/events.html', active_page='events', events=all_events, registered_ids=registered_ids)
 
-@app.route("/admin")
-def admin():
-    return render_template("/Dashboard/admin.html")
+@app.route('/event/<int:event_id>')
+@login_required
+def event_details(event_id):
+    event = Event.query.get_or_404(event_id)
+    registration = EventRegistration.query.filter_by(user_id=current_user.id, event_id=event_id).first()
+    is_registered = True if registration else False
+    return render_template('student/event_details.html', event=event, is_registered=is_registered)
+
+@app.route('/register/<int:event_id>')
+@login_required
+def register_event(event_id):
+    exists = EventRegistration.query.filter_by(user_id=current_user.id, event_id=event_id).first()
+    if not exists:
+        new_reg = EventRegistration(user_id=current_user.id, event_id=event_id)
+        db.session.add(new_reg)
+        db.session.commit()
+        flash('Successfully registered!')
+    return redirect(request.referrer or url_for('events'))
+
+@app.route('/unregister/<int:event_id>')
+@login_required
+def unregister_event(event_id):
+    reg = EventRegistration.query.filter_by(user_id=current_user.id, event_id=event_id).first()
+    if reg:
+        db.session.delete(reg)
+        db.session.commit()
+        flash('Registration cancelled.', 'info')
+    return redirect(request.referrer or url_for('events'))
+
+@app.route('/messages')
+@login_required
+def messages():
+    sent_to = [m.receiver_id for m in Message.query.filter_by(sender_id=current_user.id).all()]
+    received_from = [m.sender_id for m in Message.query.filter_by(receiver_id=current_user.id).all()]
+    contact_ids = set(sent_to + received_from)
+    contacts = User.query.filter(User.id.in_(contact_ids)).all()
+    if not contacts:
+        contacts = User.query.filter(User.id != current_user.id).all()
+    return render_template('student/messages.html', active_page='messages', contacts=contacts)
+
+@app.route('/chat/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+def chat(user_id):
+    other_user = User.query.get_or_404(user_id)
+    if request.method == 'POST':
+        body = request.form.get('body')
+        if body:
+            msg = Message(sender_id=current_user.id, receiver_id=other_user.id, body=body)
+            db.session.add(msg)
+            db.session.commit()
+        return redirect(url_for('chat', user_id=user_id))
+    
+    conversation = Message.query.filter(
+        or_(
+            (Message.sender_id == current_user.id) & (Message.receiver_id == other_user.id),
+            (Message.sender_id == other_user.id) & (Message.receiver_id == current_user.id)
+        )
+    ).order_by(Message.timestamp.asc()).all()
+    return render_template('student/chat.html', other_user=other_user, messages=conversation)
+
+# --- JOB ROUTES ---
+
+@app.route('/jobs')
+@login_required
+def jobs():
+    all_jobs = Job.query.order_by(Job.posted_date.desc()).all()
+    my_apps = JobApplication.query.filter_by(user_id=current_user.id).all()
+    applied_ids = [app.job_id for app in my_apps]
+    return render_template('student/jobs.html', active_page='jobs', jobs=all_jobs, applied_ids=applied_ids)
+
+@app.route('/job/<int:job_id>')
+@login_required
+def job_details(job_id):
+    job = Job.query.get_or_404(job_id)
+    application = JobApplication.query.filter_by(user_id=current_user.id, job_id=job_id).first()
+    is_applied = True if application else False
+    return render_template('student/job_details.html', job=job, is_applied=is_applied)
+
+@app.route('/apply/<int:job_id>')
+@login_required
+def apply_job(job_id):
+    existing = JobApplication.query.filter_by(user_id=current_user.id, job_id=job_id).first()
+    if not existing:
+        new_app = JobApplication(user_id=current_user.id, job_id=job_id)
+        db.session.add(new_app)
+        db.session.commit()
+        flash('Application sent successfully!', 'success')
+    return redirect(request.referrer or url_for('jobs'))
+
+# --- MENTORSHIP ROUTES ---
+
+@app.route('/mentorship')
+@login_required
+def mentorship():
+    alumni_list = User.query.filter_by(role='Alumni').all()
+    my_requests = Mentorship.query.filter_by(student_id=current_user.id).all()
+    request_status = {req.mentor_id: req.status for req in my_requests}
+    return render_template('student/mentorship.html', active_page='mentorship', alumni_list=alumni_list, request_status=request_status)
+
+@app.route('/mentor/<int:mentor_id>')
+@login_required
+def mentor_details(mentor_id):
+    mentor = User.query.get_or_404(mentor_id)
+    
+    # Check if there is a request
+    req = Mentorship.query.filter_by(student_id=current_user.id, mentor_id=mentor_id).first()
+    status = req.status if req else None # Returns 'Pending', 'Accepted', or None
+
+    return render_template('student/mentor_details.html', mentor=mentor, status=status)
 
 
+@app.route('/edit_profile', methods=['POST'])
+@login_required
+def edit_profile():
+    if request.method == 'POST':
+        # Get data from the form
+        current_user.headline = request.form.get('headline')
+        current_user.location = request.form.get('location')
+        current_user.bio = request.form.get('bio')
+        current_user.skills = request.form.get('skills')
+        
+        # Save to database
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        
+    # Go back to the profile page
+    return redirect(url_for('profile'))
 
-#nono touch
-if __name__ == "__main__":
+@app.route('/request_mentor/<int:mentor_id>')
+@login_required
+def request_mentor(mentor_id):
+    existing = Mentorship.query.filter_by(student_id=current_user.id, mentor_id=mentor_id).first()
+    
+    if not existing:
+        new_req = Mentorship(student_id=current_user.id, mentor_id=mentor_id)
+        db.session.add(new_req)
+        db.session.commit()
+        flash('Mentorship request sent!', 'success')
+        
+    return redirect(request.referrer or url_for('mentorship'))
+
+@app.route('/cancel_request/<int:mentor_id>')
+@login_required
+def cancel_request(mentor_id):
+    req = Mentorship.query.filter_by(student_id=current_user.id, mentor_id=mentor_id).first()
+    
+    if req:
+        db.session.delete(req)
+        db.session.commit()
+        flash('Mentorship request cancelled.', 'info')
+    
+    return redirect(request.referrer or url_for('mentorship'))
+
+@app.route('/profile')
+@login_required
+def profile():
+    my_posts = Post.query.filter_by(author_name=current_user.username).order_by(Post.timestamp.desc()).all()
+    return render_template('student/profile.html', active_page='profile', user=current_user, posts=my_posts)
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)

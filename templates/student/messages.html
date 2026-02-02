@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<main class="feed">
+    <div class="feed-header">
+        <h2>Messages</h2>
+        <i class="fas fa-edit settings-icon"></i>
+    </div>
+
+    <div class="message-search" style="margin-bottom: 20px;">
+        <input type="text" placeholder="Search messages..." style="width: 100%; padding: 10px; border: 1px solid #eee; border-radius: 20px; background: #f9f9f9;">
+    </div>
+
+    <div class="message-list">
+        
+        <div class="message-item unread">
+            <img src="https://via.placeholder.com/40" class="avatar">
+            <div class="msg-preview">
+                <div class="msg-top">
+                    <span class="name">Miracle Rosser</span>
+                    <span class="time">12:30 PM</span>
+                </div>
+                <p>Hey, are you going to the alumni dinner tonight?</p>
+            </div>
+            <div class="msg-status">
+                <span class="dot"></span>
+            </div>
+        </div>
+
+        <div class="message-item">
+            <img src="https://via.placeholder.com/40" class="avatar">
+            <div class="msg-preview">
+                <div class="msg-top">
+                    <span class="name">Craig Dorwart</span>
+                    <span class="time">Yesterday</span>
+                </div>
+                <p>Thanks for the help with the UML diagrams. I passed!</p>
+            </div>
+        </div>
+
+        <div class="message-item">
+            <img src="https://via.placeholder.com/40" class="avatar">
+            <div class="msg-preview">
+                <div class="msg-top">
+                    <span class="name">Dr. Sarah Connor</span>
+                    <span class="time">Mon</span>
+                </div>
+                <p>Please submit your final year project proposal by Friday.</p>
+            </div>
+        </div>
+
+        <div class="message-item">
+            <img src="https://via.placeholder.com/40" class="avatar">
+            <div class="msg-preview">
+                <div class="msg-top">
+                    <span class="name">MMU Hackathon Team</span>
+                    <span class="time">Sun</span>
+                </div>
+                <p>You have been registered for the event. See you there!</p>
+            </div>
+        </div>
+
+    </div>
+</main>
+{% endblock %}
